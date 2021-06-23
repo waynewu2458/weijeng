@@ -6,6 +6,7 @@ import 'GlobalVariable.dart' as gv;
 import 'FoodList.dart';
 import 'Addfood.dart';
 import 'ChooseFoodType.dart';
+import 'Webview.dart';
 void main() {
   runApp(Dashboard());
 }
@@ -19,7 +20,7 @@ class DashboardState extends State<Dashboard> {
   @override
   Widget build(BuildContext context) {
     final title = '歡迎' + gv.Username;
-    var arr = ['點餐', '我的訂單查詢', '新建餐點(admin)', '全部訂單查詢(admin)'];
+    var arr = ['點餐', '我的訂單查詢', '新建餐點(admin)', '全部訂單查詢(admin)','播放影片'];
     return new WillPopScope(
       child: Scaffold(
         appBar: AppBar(
@@ -74,6 +75,18 @@ class DashboardState extends State<Dashboard> {
                         }
                         break;
                       }
+
+                    case ('播放影片'):
+                      {
+
+                        Navigator.push(
+                          context,
+                          new MaterialPageRoute(builder: (context) =>Webview()),
+                        );
+
+                        break;
+                      }
+
                   }
                 },
               );

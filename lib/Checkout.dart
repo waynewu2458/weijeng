@@ -69,9 +69,55 @@ class httpstate extends State<Checkout> {
   Widget build(BuildContext context) {
     double total = foodlist
         .map((e) => e['price'] * e['count'])
-        .fold(0, (previousValue, element) => previousValue + element);///計算金額
+        .fold(0, (previousValue, element) => previousValue + element);
+
+    ///計算金額
     return Scaffold(
-        appBar: AppBar(title: Text('結帳清單 總共$total元')),
+        appBar: AppBar(title: Text('結帳清單 總共$total元'), actions: [
+          PopupMenuButton(
+            icon: Icon(Icons.more_vert),
+            itemBuilder: (BuildContext context) => <PopupMenuEntry>[
+              const PopupMenuItem(
+                child: ListTile(
+                  leading: Icon(Icons.article),
+                  title: Text('結帳'),
+                ),
+                value: 0,
+              ),
+              const PopupMenuItem(
+                child: ListTile(
+                  leading: Icon(Icons.delete),
+                  title: Text('清除購物車'),
+                ),
+                value: 1,
+              ),
+              const PopupMenuItem(
+                child: ListTile(
+                  leading: Icon(Icons.delete),
+                  title: Text('清除並重新購買'),
+                ),
+                value: 2,
+              ),
+            ],
+            onSelected: (result) {
+              switch(result){
+                case(1):{
+                  setState(() {
+                    gv.gvfoodlist.clear();
+                  });
+           
+                  break;
+                }
+                case(2):{
+                  gv.gvfoodlist.clear();
+                  Navigator.pop(context);
+                }
+                
+              }
+
+            },
+          ),
+        ]),
         body: ListView.builder(
           padding: EdgeInsets.all(5),
           itemCount: foodlist == null ? 0 : foodlist.length,

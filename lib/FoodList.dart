@@ -8,45 +8,11 @@ import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'GlobalVariable.dart' as gv;
+import 'Checkout.dart';
 
 void main() => runApp(FoodList());
 
-// class FoodList extends StatelessWidget {
-//   @override
-//   Widget build(BuildContext context) {
-//     return new Scaffold(
-//         appBar: AppBar(title: Text('餐點清單'), actions: [
-//           PopupMenuButton(
-//
-//             icon: Icon(Icons.more_vert),
-//             itemBuilder: (BuildContext context) => <PopupMenuEntry>[
-//
-//               const PopupMenuItem(
-//                 child: ListTile(
-//                   leading: Icon(Icons.free_breakfast),
-//                   title: Text('早餐'),
-//
-//                 ),
-//               ),
-//               const PopupMenuItem(
-//                 child: ListTile(
-//                   leading: Icon(Icons.lunch_dining),
-//                   title: Text('午餐'),
-//                 ),
-//               ),
-//               const PopupMenuItem(
-//                 child: ListTile(
-//                   leading: Icon(Icons.local_drink),
-//                   title: Text('飲料'),
-//                 ),
-//               ),
-//
-//             ],
-//           ),
-//         ]),
-//         body: Listfromhttp());
-//   }
-// }
+
 
 class FoodList extends StatefulWidget {
   @override
@@ -93,7 +59,57 @@ class httpstate extends State<FoodList> {
   Widget build(BuildContext context) {
     var arr = ['早餐', '午餐', '飲料'];
     return Scaffold(
-        appBar: AppBar(title: Text('餐點清單')),
+        appBar: AppBar(title: Text('餐點清單'), actions: [
+          IconButton(
+            icon: Icon(
+              Icons.add,
+              color: Colors.white,
+            ),
+            onPressed: () {
+              setState(() {
+
+                foodlist.where((element) => element['count']>0).forEach((x) {
+
+                  if(!gv.gvfoodlist.map((e) => e['Foodid']).contains(x['Foodid'])){
+                    gv.gvfoodlist.add( jsonDecode(jsonEncode(x))  );
+
+                  }
+                  else{
+                    gv.gvfoodlist.where((e) => e['Foodid']==x['Foodid']).first['count']+= x['count'];
+
+                  }
+
+                });
+              });
+              //add的click事件
+
+            },
+          ),
+          IconButton(
+            icon: Icon(
+              gv.gvfoodlist.length==0? Icons.shopping_cart_outlined:Icons.shopping_cart,
+              color: Colors.white,
+            ),
+            onPressed: () {
+              //前往購物車
+
+              Navigator.push(
+                context,
+                new MaterialPageRoute(builder: (context) => Checkout()),
+              ).then((value) => {
+                    //返回時將本地list數量全部歸零
+                    setState(() {
+                      foodlist.forEach((x) {
+
+x['count']=0;
+
+                      });
+
+                    })
+                  });
+            },
+          )
+        ]),
         body: ListView.builder(
             padding: EdgeInsets.all(5),
             itemCount: foodtypelist == null ? 0 : foodtypelist.length,
@@ -108,14 +124,27 @@ class httpstate extends State<FoodList> {
                       style:
                           TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                     ),
-                    children:
-
-                    foodlist.where((x) => x['foodtype'] == i).map<Widget>((e) =>
-                    ListTile(
-                              title: Text(e['FoodName']),
+                    children: foodlist
+                        .where((x) => x['foodtype'] == i)
+                        .map<Widget>((e) => ListTile(
+                              title: Text(
+                                  e['FoodName'] + ' ' + e['price'].toString()),
                               trailing: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: <Widget>[
+                                  IconButton(
+                                      icon: new Icon(Icons.image),
+                                      onPressed: () {
+                                        return showDialog(
+                                            context: context,
+                                            builder: (BuildContext context) {
+                                              return AlertDialog(
+                                                title: Text(e['FoodName']),
+                                                content: Image.network(
+                                                    e['FoodPictureURL']),
+                                              );
+                                            });
+                                      }),
                                   e['count'] != 0
                                       ? new IconButton(
                                           icon: new Icon(Icons.remove),
@@ -127,115 +156,12 @@ class httpstate extends State<FoodList> {
                                   IconButton(
                                       icon: new Icon(Icons.add),
                                       onPressed: () =>
-                                          setState(() => e['count']++))
+                                          setState(() => e['count']++)),
                                 ],
                               ),
-                            )).toList(),
+                            ))
+                        .toList(),
                   ));
             }));
-  }
-}
-
-class FoodTypeList extends StatefulWidget {
-  var FoodType;
-  List<dynamic> foodlist;
-
-  FoodTypeList(this.FoodType, this.foodlist);
-
-  @override
-  FoodTypeState createState() => FoodTypeState();
-}
-
-class FoodTypeState extends State<FoodTypeList> {
-  var expaned = false;
-
-  @override
-  Widget build(BuildContext context) {
-    var typearray = ['早餐', '午餐', '飲料'];
-    print(widget.FoodType);
-    return Column(
-      children: <Widget>[
-        ListTile(
-          title: Text(typearray[widget.FoodType]),
-          trailing: Row(mainAxisSize: MainAxisSize.min, children: [
-            IconButton(
-                icon: new Icon(
-                    expaned ? Icons.expand_less_outlined : Icons.expand_more),
-                onPressed: () => setState(() => expaned = !expaned))
-          ]),
-        ),
-        ListView.builder(
-            scrollDirection: Axis.vertical,
-            shrinkWrap: true,
-            padding: EdgeInsets.all(5),
-            itemCount: !expaned || widget.foodlist == null
-                ? 0
-                : widget.foodlist.length,
-            itemBuilder: (context, i) {
-              return ListTileItem(widget.foodlist[i]);
-            })
-      ],
-    );
-
-    ListTile(
-        title: new Text(typearray[widget.FoodType]),
-        trailing: new Row(
-          mainAxisSize: MainAxisSize.min,
-          children: <Widget>[
-            IconButton(
-                icon: new Icon(
-                    expaned ? Icons.expand_less_outlined : Icons.expand_more),
-                onPressed: () => setState(() => expaned = !expaned))
-          ],
-        ));
-  }
-}
-
-class ListTileItem extends StatefulWidget {
-  var fooditem;
-
-  ListTileItem(this.fooditem);
-
-  @override
-  _ListTileItemState createState() => new _ListTileItemState();
-}
-
-class _ListTileItemState extends State<ListTileItem> {
-  @override
-  Widget build(BuildContext context) {
-    var data = widget.fooditem;
-    String type = data['foodtype'] == 0
-        ? '早餐'
-        : data['foodtype'] == 1
-            ? '午餐'
-            : '飲料';
-
-    return Container(
-      decoration: BoxDecoration(border: Border.all(color: Colors.black)),
-      margin: EdgeInsets.all(5),
-      child: ListTile(
-        title: new Text(
-            data['FoodName'] + ' ' + data['price'].toString() + ' ' +  data['foodtype'] == 0
-                ? '早餐'
-                : data['foodtype'] == 1
-                ? '午餐'
-                : '飲料'),
-        trailing: new Row(
-          mainAxisSize: MainAxisSize.min,
-          children: <Widget>[
-            data['count'] != 0
-                ? new IconButton(
-                    icon: new Icon(Icons.remove),
-                    onPressed: () => setState(() => data['count']--),
-                  )
-                : new Container(),
-            Text(data['count'].toString()),
-            IconButton(
-                icon: new Icon(Icons.add),
-                onPressed: () => setState(() => data['count']++))
-          ],
-        ),
-      ),
-    );
   }
 }
